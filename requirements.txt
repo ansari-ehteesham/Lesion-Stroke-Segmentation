@@ -1,0 +1,16 @@
+numpy
+pandas
+matplotlib
+seaborn
+tensorflow
+opencv-python
+pillow
+PyYAML
+ensure
+python-box
+notebook
+setuptools
+bids
+nibabel
+git+https://github.com/NPNL/bidsio
+-e .
