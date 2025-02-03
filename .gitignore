@@ -173,3 +173,13 @@ cython_debug/
 
 # Extra
 Documents/
+artifacts/
+Raw Data/
+notebooks/trial.ipynb
+
+
+# Encrypted Dataset Dataset
+ATLAS_R2.0_encrypted.tar.gz
+
+# Zip Dataset
+ATLAS_R2.0.tar.gz
