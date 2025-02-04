@@ -49,10 +49,9 @@ class DataIngestion:
     def extract_dataset(self):
         unzip_dir = self.config.unzip_dir
         zip_file = self.config.zip_dataset
-        self.decrypt_dataset(unzip_dir, zip_file)
 
-        # Unzip File
         try:
+            self.decrypt_dataset(zip_file)
             file = tarfile.open(zip_file)
             file.extractall(unzip_dir) 
             file.close()

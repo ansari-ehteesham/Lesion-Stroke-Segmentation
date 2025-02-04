@@ -1,10 +1,11 @@
 from pathlib import Path
 from lesionSeg.constant import *
 from lesionSeg.Utils.common import read_yaml, create_directory
-from lesionSeg.entity import (DataIngestionEntity)
+from lesionSeg.entity import (DataIngestionEntity,
+                              DataValidationEntity)
 
 
-class ConfiguratioManager:
+class ConfigurationManager:
     def __init__(self, parmas_file = PARAMS_FILE_PATH, config_file = CONFIG_FILE_PATH):
         self.parmas = read_yaml(parmas_file)
         self.config = read_yaml(config_file)
@@ -23,3 +24,16 @@ class ConfiguratioManager:
         )
 
         return data_ingestion
+    
+    def data_validation_config(self):
+        config = self.config.data_validation
+
+        create_directory([config.sample_op_dir])
+
+        data_validation = DataValidationEntity(
+            root_dir = config.root_dir,
+            animation_file = config.animation_file,
+            report_file = config.report_file,
+        )
+
+        return data_validation

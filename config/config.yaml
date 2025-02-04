@@ -5,3 +5,9 @@ data_ingestion:
   zip_dataset: Raw.tar.gz
   unzip_dir: artifact/
   secret_dir: secret.yaml
+
+data_validation:
+  root_dir: artifact/data_ingestion
+  sample_op_dir: artifact/data_validation
+  animation_file: artifact/data_validation/mri_animation.mp4
+  report_file: artifact/data_validation/report.csv
