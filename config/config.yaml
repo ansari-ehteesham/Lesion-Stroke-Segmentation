@@ -1,0 +1,7 @@
+artifact_root: 'artifact'
+
+data_ingestion:
+  encrypted_dataset: ATLAS_R2.0_encrypted.tar.gz
+  zip_dataset: Raw.tar.gz
+  unzip_dir: artifact/
+  secret_dir: secret.yaml

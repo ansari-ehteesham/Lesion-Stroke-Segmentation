@@ -173,7 +173,7 @@ cython_debug/
 
 # Extra
 Documents/
-artifacts/
+artifact/
 Raw Data/
 notebooks/trial.ipynb
 
@@ -182,4 +182,7 @@ notebooks/trial.ipynb
 ATLAS_R2.0_encrypted.tar.gz
 
 # Zip Dataset
-ATLAS_R2.0.tar.gz
+Raw.tar.gz
+
+# secret key
+secret.yaml
