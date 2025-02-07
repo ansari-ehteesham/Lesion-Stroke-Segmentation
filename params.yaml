@@ -1,1 +1,4 @@
-key: value
+image_preprocess:
+  img_height: 128
+  img_width: 128
+  img_norms_range: [0,1]

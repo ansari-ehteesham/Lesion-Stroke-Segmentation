@@ -51,7 +51,10 @@ class DataIngestion:
         zip_file = self.config.zip_dataset
 
         try:
+            logger.info(f"Dataset Decryption has been Started")
             self.decrypt_dataset(zip_file)
+
+            logger.info(f"Zipped File Extraction has been Started")
             file = tarfile.open(zip_file)
             file.extractall(unzip_dir) 
             file.close()

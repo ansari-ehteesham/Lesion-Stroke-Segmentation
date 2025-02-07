@@ -19,3 +19,8 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("lesionSegmentationlogger")
+
+
+logging.getLogger("nibabel").setLevel(logging.ERROR)
+logging.getLogger("matplotlib.animation").setLevel(logging.ERROR)
+logging.getLogger("imageio_ffmpeg").setLevel(logging.ERROR)

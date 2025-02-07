@@ -2,12 +2,13 @@ from pathlib import Path
 from lesionSeg.constant import *
 from lesionSeg.Utils.common import read_yaml, create_directory
 from lesionSeg.entity import (DataIngestionEntity,
-                              DataValidationEntity)
+                              DataValidationEntity,
+                              DataProcessingEntity)
 
 
 class ConfigurationManager:
     def __init__(self, parmas_file = PARAMS_FILE_PATH, config_file = CONFIG_FILE_PATH):
-        self.parmas = read_yaml(parmas_file)
+        self.params = read_yaml(parmas_file)
         self.config = read_yaml(config_file)
 
         create_directory([self.config.artifact_root])
@@ -31,9 +32,33 @@ class ConfigurationManager:
         create_directory([config.sample_op_dir])
 
         data_validation = DataValidationEntity(
-            root_dir = config.root_dir,
-            animation_file = config.animation_file,
-            report_file = config.report_file,
+            root_dir = Path(config.root_dir),
+            animation_file = Path(config.animation_file),
+            report_file = Path(config.report_file),
         )
 
         return data_validation
+    
+    def data_preprocessing_config(self) -> DataProcessingEntity:
+        params = self.params.image_preprocess
+        config = self.config.data_preprocessing
+
+        create_directory([config.root_dir, 
+                          config.preprocess_train_in, 
+                          config.preprocess_train_op, 
+                          config.preprocess_test_in])
+
+        data_preprocessing_entity = DataProcessingEntity(
+            training_data = Path(config.training_data),
+            train_csv = Path(config.train_csv),
+            test_csv = Path(config.test_csv),
+            testing_data = Path(config.testing_data),
+            preprocess_train_in = Path(config.preprocess_train_in),
+            preprocess_train_op = Path(config.preprocess_train_op),
+            preprocess_test_in = Path(config.preprocess_test_in),
+            img_height = params.img_height,
+            img_width = params.img_width,
+            img_norms_range = params.img_norms_range
+        )
+        
+        return data_preprocessing_entity

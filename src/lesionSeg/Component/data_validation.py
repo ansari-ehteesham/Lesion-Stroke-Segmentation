@@ -93,8 +93,8 @@ class DataValidation:
             input_sample = training_layout.get(suffix='T1w', extension=['.nii', '.nii.gz'])[rand_number]
             output_sample = training_layout.get(suffix='mask', extension=['.nii', '.nii.gz'])[rand_number]
 
-            logger.info(f"Loading Sample Input: {input_sample}")
-            logger.info(f"Loading Sample Output: {output_sample}")
+            logger.info(f"Loading Sample Input: {input_sample.filename}")
+            logger.info(f"Loading Sample Output: {output_sample.filename}")
 
             input_data = self.load_nii_file(input_sample)
             mask_data = self.load_nii_file(output_sample)
