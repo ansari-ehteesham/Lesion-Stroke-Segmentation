@@ -29,4 +29,4 @@ class DataProcessingEntity:
     preprocess_test_in: Path
     img_height: int
     img_width: int
-    img_norms_range: list
+    slice_stride: int

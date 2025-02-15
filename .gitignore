@@ -187,3 +187,4 @@ Raw.tar.gz
 
 # secret key
 secret.yaml
+notebooks/model_training.ipynb

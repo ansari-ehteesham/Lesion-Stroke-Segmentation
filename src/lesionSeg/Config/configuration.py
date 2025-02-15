@@ -58,7 +58,7 @@ class ConfigurationManager:
             preprocess_test_in = Path(config.preprocess_test_in),
             img_height = params.img_height,
             img_width = params.img_width,
-            img_norms_range = params.img_norms_range
+            slice_stride = params.slice_stride
         )
         
         return data_preprocessing_entity

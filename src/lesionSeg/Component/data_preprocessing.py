@@ -1,194 +1,127 @@
 import os
 import cv2
 import sys
+import pandas as pd
 import numpy as np
 import nibabel as nb
-import pandas as pd
 from bids import BIDSLayout
-from lesionSeg.logging import logger 
+from lesionSeg.logging import logger
 from lesionSeg.Exception.exception import CustomeException
 from lesionSeg.entity import DataProcessingEntity
-
+from scipy import ndimage
+from typing import Dict, Tuple
 import logging
+
 logging.getLogger("nibabel").setLevel(logging.ERROR)
+
 
 
 class DataPreprocessing:
     def __init__(self, config: DataProcessingEntity):
         self.config = config
 
-    def normalize_img(self, X):
+    def calculate_resize_factors(self, slice_data: np.ndarray) -> Tuple[float, float]:
         """
-        Normalize image intensities to the range specified in the config.
+        Calculate resize factors for the given slice data.
         """
-        alpha = self.config.img_norms_range[0]
-        beta = self.config.img_norms_range[1]
-        norm_img = cv2.normalize(X, dst=None, alpha=alpha, beta=beta, norm_type=cv2.NORM_MINMAX)
-        return norm_img
-    
-    def img_resize(self, X, label='input'):
-        """
-        Resize an image to the target size specified in the config.
-        Uses Lanczos interpolation for input images and nearest neighbor for masks.
-        """
-        img_size = (self.config.img_width, self.config.img_height)
-        if label == 'input':
-            resized_img = cv2.resize(X, dsize=img_size, interpolation=cv2.INTER_LANCZOS4)
-        elif label == 'mask':
-            resized_img = cv2.resize(X, dsize=img_size, interpolation=cv2.INTER_NEAREST)
-        else:
-            raise ValueError(f"Label -> {label} is Incorrect. Use 'input' or 'mask'.")
-        return resized_img
-    
-    def train_df_process(self, df):
+        current_width, current_height = slice_data.shape[:2]
+        DESIRED_HEIGHT = self.config.img_height
+        DESIRED_WIDTH = self.config.img_width
+        height_factor = DESIRED_HEIGHT / current_height
+        width_factor = DESIRED_WIDTH / current_width
+        return height_factor, width_factor
+
+    def train_df_process(self, df) -> pd.DataFrame:
         """
         Process the training dataframe by selecting the necessary columns and merging input and mask files.
         """
         selected_cols = ["path", "subject"]
-        df_input = df[df['suffix'] == 'T1w'][selected_cols].rename({'path': 'og_input_path'}, axis=1)
-        df_mask = df[df['suffix'] == 'mask'][selected_cols].rename({'path': 'og_mask_path'}, axis=1)
-        updt_cols = ['og_input_path', 'og_mask_path', 'subject']
-        df_merge = df_input.merge(df_mask, on='subject', how='inner').reset_index(drop=True).reindex(columns=updt_cols)
-        return df_merge
-    
-    def test_df_process(self, df):
+        df_input = df[df['suffix'] == 'T1w'][selected_cols].rename(columns={'path': 'og_input_path'})
+        df_mask = df[df['suffix'] == 'mask'][selected_cols].rename(columns={'path': 'og_mask_path'})
+        df_merge = df_input.merge(df_mask, on='subject', how='inner').reset_index(drop=True)
+        return df_merge[['og_input_path', 'og_mask_path', 'subject']]
+
+    def test_df_process(self, df) -> pd.DataFrame:
         """
         Process the testing dataframe by selecting the necessary columns.
         """
         selected_cols = ["path", "subject"]
-        df_input = df[df['suffix'] == 'T1w'][selected_cols].rename({'path': 'og_input_path'}, axis=1)
+        df_input = df[df['suffix'] == 'T1w'][selected_cols].rename(columns={'path': 'og_input_path'})
         return df_input
 
-    def preprocess_train_dataset(self, n):
+    def _process_slice(self, slice_data: np.ndarray, output_path: str, is_mask: bool = False):
         """
-        Preprocess one training subject: load input and mask volumes, process each slice by resizing 
-        and normalizing, then save the processed volumes as NIfTI images.
+        Helper method to process and save a single slice.
+        """
+        height_factor, width_factor = self.calculate_resize_factors(slice_data)
+        resized_slice = ndimage.zoom(slice_data, (width_factor, height_factor, 1), order=1)
+        
+        if is_mask:
+            resized_slice = (resized_slice * 255).astype(np.uint8)  # Ensure binary mask is scaled correctly
+        cv2.imwrite(output_path, resized_slice)
+        
+
+    def preprocess_train_dataset(self, n: Dict):
+        """
+        Preprocess one training subject.
         """
         X_path = n["og_input_path"]
         y_path = n["og_mask_path"]
         subject = n['subject']
-        
-        input_dir = self.config.preprocess_train_in
-        output_dir = self.config.preprocess_train_op
-        processed_input_path = os.path.join(input_dir, f"{subject}_input.nii.gz")
-        processed_mask_path = os.path.join(output_dir, f"{subject}_mask.nii.gz")
+        SLICE_STRIDE = self.config.slice_stride
 
         in_nib = nb.load(X_path)
         mask_nib = nb.load(y_path)
 
-        ras_in = nb.as_closest_canonical(in_nib)
-        ras_mask = nb.as_closest_canonical(mask_nib)
+        X_img = nb.as_closest_canonical(in_nib).get_fdata()
+        y_img = nb.as_closest_canonical(mask_nib).get_fdata()
 
-        # Get the data arrays and affine matrices.
-        X_img = ras_in.get_fdata()
-        y_img = ras_mask.get_fdata()
-        affine_input = ras_in.affine
-        affine_mask = ras_mask.affine 
+        img_no = X_img.shape[2] // SLICE_STRIDE
 
-        img_no = X_img.shape[2]
-        target_height = self.config.img_height
-        target_width  = self.config.img_width
-        
-        # Pre-allocate arrays for processed volumes.
-        processed_in_volume = np.empty((target_height, target_width, img_no), dtype=np.float32)
-        processed_mask_volume = np.empty((target_height, target_width, img_no), dtype=np.float32)
+        for i in range(0, img_no, SLICE_STRIDE):
+            input_slice = X_img[:, :, i:i+3]  # Stack 3 slices
+            mask_slice = np.expand_dims(y_img[:, :, i+2], axis=-1)  # Use the middle slice for mask
 
-        for i in range(img_no):
-            # Process input slice: resize (with label 'input') then normalize.
-            input_img_arr = X_img[:, :, i]
-            resized_input = self.img_resize(input_img_arr, label='input')
-            norm_input = self.normalize_img(resized_input)
-            processed_in_volume[:, :, i] = norm_input
+            input_path = os.path.join(self.config.preprocess_train_in, f"{subject}_{i}.png")
+            mask_path = os.path.join(self.config.preprocess_train_op, f"{subject}_{i}.png")
 
-            # Process mask slice: resize using nearest neighbor (with label 'mask').
-            mask_img_arr = y_img[:, :, i]
-            resized_mask = self.img_resize(mask_img_arr, label='mask')
-            processed_mask_volume[:, :, i] = resized_mask
+            self._process_slice(input_slice, input_path)
+            self._process_slice(mask_slice, mask_path, is_mask=True)
 
-        # Create new NIfTI images using the processed data and the original affines.
-        processed_in_nib = nb.Nifti1Image(processed_in_volume, affine_input)
-        processed_mask_nib = nb.Nifti1Image(processed_mask_volume, affine_mask)
-
-        nb.save(processed_in_nib, processed_input_path)
-        nb.save(processed_mask_nib, processed_mask_path)
-
-        return processed_input_path, processed_mask_path
-    
-    def preprocess_test_dataset(self, n):
+    def preprocess_test_dataset(self, n: Dict):
         """
-        Preprocess one test subject: load input volume, process each slice by resizing and normalizing,
-        then save the processed volume as a NIfTI image.
+        Preprocess one test subject.
         """
         X_path = n["og_input_path"]
         subject = n['subject']
+        SLICE_STRIDE = self.config.slice_stride
 
-        input_dir = self.config.preprocess_test_in
-        processed_input_path = os.path.join(input_dir, f"{subject}_input.nii.gz")
+        X_img = nb.as_closest_canonical(nb.load(X_path)).get_fdata()
+        img_no = X_img.shape[2] // SLICE_STRIDE
 
-        in_nib = nb.load(X_path)
-        ras_nib = nb.as_closest_canonical(in_nib)
-        X_img = ras_nib.get_fdata()
-        affine_input = in_nib.affine
-
-        img_no = X_img.shape[2]
-        target_height = self.config.img_height
-        target_width  = self.config.img_width
-        processed_in_volume = np.empty((target_height, target_width, img_no), dtype=np.float32)
-
-        for i in range(img_no):
-            input_img_arr = X_img[:, :, i]
-            resized_input = self.img_resize(input_img_arr, label='input')
-            norm_input = self.normalize_img(resized_input)
-            processed_in_volume[:, :, i] = norm_input
-        
-        processed_in_nib = nb.Nifti1Image(processed_in_volume, affine_input)
-        nb.save(processed_in_nib, processed_input_path)
-        return processed_input_path
+        for i in range(0, img_no, SLICE_STRIDE):
+            input_slice = X_img[:, :, i]
+            input_path = os.path.join(self.config.preprocess_test_in, f"{subject}_{i}.png")
+            self._process_slice(input_slice, input_path)
 
     def preprocess_dataset(self):
         """
-        Process the entire dataset by creating BIDS dataframes, processing training and test files,
-        and logging the locations of the processed data.
+        Process the entire dataset.
         """
         try:
-            train_root = self.config.training_data
-            test_root = self.config.testing_data
+            train_layout = BIDSLayout(root=self.config.training_data, validate=False)
+            test_layout = BIDSLayout(root=self.config.testing_data, validate=False)
 
-            train_layout = BIDSLayout(root=train_root, validate=False)
-            test_layout = BIDSLayout(root=test_root, validate=False)
+            train_df = self.train_df_process(train_layout.to_df())
+            test_df = self.test_df_process(test_layout.to_df())
 
-            train_df = train_layout.to_df()
-            logger.info("Training Dataframe has been Created")
-            test_df = test_layout.to_df()
-            logger.info("Testing Dataframe has been Created")
+            logger.info("Training and Testing DataFrames have been created and pre-processed.")
 
-            processed_train_df = self.train_df_process(train_df)
-            logger.info("Training Dataframe has been Pre-processed")
-            processed_test_df = self.test_df_process(test_df)
-            logger.info("Testing Dataframe has been Pre-processed")
+            train_df.apply(lambda x: self.preprocess_train_dataset(x), axis=1)
+            test_df.apply(lambda x: self.preprocess_test_dataset(x), axis=1)
 
-            processed_train_df[["processed_input_path", "processed_output_path"]] = processed_train_df.apply(
-                lambda x: pd.Series(self.preprocess_train_dataset(x)), axis=1
-            )
-            logger.info(f"Pre-Processed Input Training Data at: {self.config.preprocess_train_in}")
-            logger.info(f"Pre-Processed Mask Training Data at: {self.config.preprocess_train_op}")
-
-            processed_test_df["processed_input_path"] = processed_test_df.apply(
-                lambda x: self.preprocess_test_dataset(x), axis=1
-            )
-            logger.info(f"Pre-Processed Input Testing Data at: {self.config.preprocess_test_in}")
-            
-            train_csv_dir = self.config.train_csv
-            test_csv_dir = self.config.test_csv
-
-            processed_train_df.to_csv(train_csv_dir, index=False)
-            logger.info(f'Training Dataset CSV File at: {train_csv_dir}')
-            
-            processed_test_df.to_csv(test_csv_dir, index=False)
-            logger.info(f'Testing Dataset CSV File at: {test_csv_dir}')
-
-            logger.info(f"Total Training Data Instance: {processed_train_df.shape[0]}")
-            logger.info(f"Total Testing Data Instance: {processed_test_df.shape[0]}")
+            logger.info(f"Pre-processed training data saved at: {self.config.preprocess_train_in}")
+            logger.info(f"Pre-processed testing data saved at: {self.config.preprocess_test_in}")
 
         except Exception as e:
             raise CustomeException(e, sys)
