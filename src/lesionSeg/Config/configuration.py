@@ -3,7 +3,8 @@ from lesionSeg.constant import *
 from lesionSeg.Utils.common import read_yaml, create_directory
 from lesionSeg.entity import (DataIngestionEntity,
                               DataValidationEntity,
-                              DataProcessingEntity)
+                              DataProcessingEntity,
+                              ModelTrainingEntity)
 
 
 class ConfigurationManager:
@@ -62,3 +63,32 @@ class ConfigurationManager:
         )
         
         return data_preprocessing_entity
+    
+    def model_training_config(self):
+        config = self.config.model_training
+        params = self.params.model_training
+
+        create_directory([config.root_dir, config.trained_model])
+
+        training_entity = ModelTrainingEntity(
+            train_input_data = Path(config.train_input_data),
+            train_mask_data = Path(config.train_mask_data),
+            trained_model= Path(config.trained_model),
+            tensorboard_logs = Path(config.tensorboard_logs),
+            batch_size = params.batch_size,
+            nfilters = params.nfilters,
+            drop_out = params.drop_out,
+            nclasses = params.nclasses,
+            focal_alpha_loss = params.focal_alpha_loss,
+            focal_gamma_loss = params.focal_gamma_loss,
+            learning_rate = params.learning_rate,
+            input_height = params.input_height,
+            input_width = params.input_width,
+            input_channel = params.input_channel,
+            final_class_activation = params.final_class_activation,
+            activation = params.activation,
+            kernel_initializer = params.kernel_initializer,
+            epochs = params.epochs,
+        )
+
+        return training_entity

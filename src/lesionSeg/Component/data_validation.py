@@ -111,4 +111,4 @@ class DataValidation:
 
             self.dataset_report(training_layout, testing_layout)
         except Exception as e:
-            raise CustomeException(e,sys)
+            raise CustomeException(e)

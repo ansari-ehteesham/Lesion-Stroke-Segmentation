@@ -43,7 +43,7 @@ class DataIngestion:
                 logger.info(f"Dataset Decrypted Successfully at: {zip_file}")
 
         except Exception as e:
-            raise CustomeException(e,sys)
+            raise CustomeException(e)
         
 
     def extract_dataset(self):
@@ -60,7 +60,7 @@ class DataIngestion:
             file.close()
             logger.info(f"Dataset Unzipped at: {unzip_dir}/{zip_file}")
         except Exception as e:
-            raise CustomeException(e,sys)
+            raise CustomeException(e)
         
         self.rename_folder(unzip_dir)
         

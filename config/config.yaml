@@ -21,3 +21,10 @@ data_preprocessing:
   preprocess_train_in: artifact/data_preprocessed/Training/input
   preprocess_train_op: artifact/data_preprocessed/Training/output
   preprocess_test_in: artifact/data_preprocessed/Testing/input
+
+model_training:
+  root_dir: artifact/model_training
+  train_input_data: artifact/data_preprocessed/Training/input
+  train_mask_data: artifact/data_preprocessed/Training/output
+  trained_model: artifact/model_training/trained_model
+  tensorboard_logs: artifact/model_training/logs

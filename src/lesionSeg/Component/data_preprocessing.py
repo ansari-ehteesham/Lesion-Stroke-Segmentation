@@ -100,7 +100,7 @@ class DataPreprocessing:
         img_no = X_img.shape[2] // SLICE_STRIDE
 
         for i in range(0, img_no, SLICE_STRIDE):
-            input_slice = X_img[:, :, i]
+            input_slice = X_img[:, :, i:i+3]
             input_path = os.path.join(self.config.preprocess_test_in, f"{subject}_{i}.png")
             self._process_slice(input_slice, input_path)
 
@@ -124,4 +124,4 @@ class DataPreprocessing:
             logger.info(f"Pre-processed testing data saved at: {self.config.preprocess_test_in}")
 
         except Exception as e:
-            raise CustomeException(e, sys)
+            raise CustomeException(e)

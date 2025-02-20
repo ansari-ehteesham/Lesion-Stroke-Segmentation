@@ -2,3 +2,19 @@ image_preprocess:
   img_height: 128
   img_width: 128
   slice_stride: 3
+
+model_training:
+  batch_size: 32
+  nfilters: 32
+  drop_out: 0.3
+  nclasses: 1
+  focal_alpha_loss: 0.7
+  focal_gamma_loss: 0.75
+  learning_rate: 0.00001
+  input_height: 128
+  input_width: 128
+  input_channel: 3
+  epochs: 100
+  final_class_activation: 'sigmoid'
+  activation: 'relu'
+  kernel_initializer: 'he_normal'
