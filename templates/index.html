@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesion Stroke Segmentation</title>
+
+<style>
+    h1{
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+    <h1>Lesion Stroke Segmentation</h1>
+    <img src="data:image/jpeg;base64,{{ prediction_image }}" alt="Predicted Image">
+    <form method="POST" action="/" enctype="multipart/form-data">
+        <input class="ok" type="file" name="file">
+        <button class="op">Submit</button>
+    </form>
+</body>
+</html>

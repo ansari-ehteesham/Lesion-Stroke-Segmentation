@@ -9,9 +9,9 @@ import tensorflow as tf
 import cv2
 
 class Prediction:
-    def __init__(self, config: PredictionEntity):
-        self.config = config
+    def __init__(self):
         config_man = ConfigurationManager()
+        self.config = config_man.prediction_config()
         preprocess_config = config_man.data_preprocessing_config()
 
         self.pre_process_config = DataPreprocessing(config=preprocess_config)
