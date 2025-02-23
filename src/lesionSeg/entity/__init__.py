@@ -50,3 +50,8 @@ class ModelTrainingEntity:
     final_class_activation: str
     activation: str
     kernel_initializer: str
+
+
+@dataclass(frozen=True)
+class PredictionEntity:
+    model: Path

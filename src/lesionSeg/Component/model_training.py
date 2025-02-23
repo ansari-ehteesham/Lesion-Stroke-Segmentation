@@ -130,7 +130,6 @@ class ModelTraining:
             return unet
             
         elif self.args.train_type == 'fine_tune':
-
             if self.args.model_path != None:
                 logger.info(f"Loading pre-trained model from {self.args.model_path}")
         
@@ -146,7 +145,8 @@ class ModelTraining:
                         custom_objects = {
                             'focal_tversky_loss': focal_tversky_loss,
                             'dice_coff': dice_coff
-                        }
+                        },
+                        compile = False
                     )
                 return model
             except Exception as e:

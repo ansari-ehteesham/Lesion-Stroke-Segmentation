@@ -4,7 +4,8 @@ from lesionSeg.Utils.common import read_yaml, create_directory
 from lesionSeg.entity import (DataIngestionEntity,
                               DataValidationEntity,
                               DataProcessingEntity,
-                              ModelTrainingEntity)
+                              ModelTrainingEntity,
+                              PredictionEntity)
 
 
 class ConfigurationManager:
@@ -90,3 +91,12 @@ class ConfigurationManager:
         )
 
         return training_entity
+    
+    def prediction_config(self):
+        config = self.config.prediction
+
+        pred_config = PredictionEntity(
+            model=config.base_model
+        )
+
+        return pred_config

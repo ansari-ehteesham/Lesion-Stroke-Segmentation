@@ -27,3 +27,6 @@ model_training:
   train_mask_data: artifact/data_preprocessed/Training/output
   trained_model: model_training/trained_model
   tensorboard_logs: model_training/logs
+
+prediction:
+  base_model: best_model.keras
