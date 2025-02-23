@@ -16,15 +16,14 @@ data_preprocessing:
   root_dir: artifact/data_preprocessed
   training_data: artifact/data_ingestion/Training
   testing_data: artifact/data_ingestion/Testing
-  train_csv: artifact/data_preprocessed/train.csv
-  test_csv: artifact/data_preprocessed/test.csv
   preprocess_train_in: artifact/data_preprocessed/Training/input
   preprocess_train_op: artifact/data_preprocessed/Training/output
   preprocess_test_in: artifact/data_preprocessed/Testing/input
+  rm_data: artifact/data_ingestion
 
 model_training:
-  root_dir: artifact/model_training
+  root_dir: model_training
   train_input_data: artifact/data_preprocessed/Training/input
   train_mask_data: artifact/data_preprocessed/Training/output
-  trained_model: artifact/model_training/trained_model
-  tensorboard_logs: artifact/model_training/logs
+  trained_model: model_training/trained_model
+  tensorboard_logs: model_training/logs

@@ -10,7 +10,7 @@ model_training:
   nclasses: 1
   focal_alpha_loss: 0.7
   focal_gamma_loss: 0.75
-  learning_rate: 0.00001
+  learning_rate: 0.0001
   input_height: 128
   input_width: 128
   input_channel: 3

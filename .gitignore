@@ -191,5 +191,4 @@ secret.yaml
 # pre-trained model
 best_model.keras
 
-# tensorboard logs
-tensorboard logs
+model_training

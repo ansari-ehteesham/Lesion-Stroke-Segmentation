@@ -19,7 +19,6 @@ class ConfigurationManager:
         secret = read_yaml(Path(config.secret_dir))
 
         data_ingestion = DataIngestionEntity(
-            encrypted_dataset = Path(config.encrypted_dataset),
             zip_dataset = Path(config.zip_dataset),
             unzip_dir = Path(config.unzip_dir),
             password = secret.dataset_password,
@@ -51,12 +50,11 @@ class ConfigurationManager:
 
         data_preprocessing_entity = DataProcessingEntity(
             training_data = Path(config.training_data),
-            train_csv = Path(config.train_csv),
-            test_csv = Path(config.test_csv),
             testing_data = Path(config.testing_data),
             preprocess_train_in = Path(config.preprocess_train_in),
             preprocess_train_op = Path(config.preprocess_train_op),
             preprocess_test_in = Path(config.preprocess_test_in),
+            rm_data = Path(config.rm_data),
             img_height = params.img_height,
             img_width = params.img_width,
             slice_stride = params.slice_stride

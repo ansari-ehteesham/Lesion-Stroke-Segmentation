@@ -9,7 +9,6 @@ from lesionSeg.models.loss import focal_tversky_loss
 from lesionSeg.models.metrices import dice_coff
 import os
 from args import get_args
-import sys
 from typing import Tuple
 from pathlib import Path
 
@@ -35,7 +34,8 @@ class ModelTraining:
         }
         
         if self.args.train_type == 'fine_tune':
-            required_paths['model_path'] = self.args.model_path
+            if self.args.model_path != None:
+                required_paths['model_path'] = self.args.model_path
 
         for name, path in required_paths.items():
             if not Path(path).exists():
@@ -114,21 +114,7 @@ class ModelTraining:
         return [checkpoint, early_stopping, reduce_lr, tensorboard]
     
     
-    def get_min_loss_file(self, path):
-        lst_file = os.listdir(path)
-        split_lst = []
-        for file in lst_file:
-            if file.endswith('.keras'):
-                split_file = file.split("-")
-                val_loss = float(split_file[-1].replace(".keras", ""))
-                split_lst.append([file, val_loss])
-
-        min_file = min(split_lst, key= lambda x: x[1])[0]
-
-        return os.path.join(self.config.trained_model, min_file)
-
-    
-    def _initialize_model(self, mode = 'new') -> tf.keras.models:
+    def _initialize_model(self) -> tf.keras.models:
         """Initialize or load model based on training type"""
         if self.args.train_type == 'new':
             logger.info("Initializing new model")
@@ -145,17 +131,14 @@ class ModelTraining:
             
         elif self.args.train_type == 'fine_tune':
 
-            if len(self.args.model_path) != 0:
+            if self.args.model_path != None:
                 logger.info(f"Loading pre-trained model from {self.args.model_path}")
         
                 model_dir = self.args.model_path
                 
-            elif len(self.args.model_path) == 0:
-
-                if os.path.exists(self.config.trained_model) and len(os.listdir(self.config.trained_model)) != 0:
-                    model_dir = self.get_min_loss_file(self.config.trained_model)
-                else:
-                    raise CustomeException(f"Either pass Pre-trained model in --model_path or train a New Model")
+            else:
+                model_dir = "best_model.keras"
+                logger.info(f"Default Model is Loading: {model_dir}")
             
             try:
                 model = tf.keras.models.load_model(

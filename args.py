@@ -25,7 +25,13 @@ def get_args():
     parser.add_argument(
         "--epochs",
         type=int,
-        help="Number of Epoch while Training"
+        help="Choose Number of Epoch while Training"
+    )
+
+    parser.add_argument(
+        '--dataset',
+        type=str,
+        help='Enter the Encrypted Dataset Path'
     )
 
     return parser.parse_args() 

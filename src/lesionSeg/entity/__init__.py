@@ -5,7 +5,6 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class DataIngestionEntity:
-    encrypted_dataset: Path
     zip_dataset: Path
     unzip_dir: Path
     password: str
@@ -22,14 +21,14 @@ class DataValidationEntity:
 class DataProcessingEntity:
     training_data: Path
     testing_data: Path
-    train_csv: Path
-    test_csv: Path
     preprocess_train_in: Path
     preprocess_train_op: Path
     preprocess_test_in: Path
+    rm_data: Path
     img_height: int
     img_width: int
     slice_stride: int
+
 
 @dataclass(frozen=True)
 class ModelTrainingEntity:

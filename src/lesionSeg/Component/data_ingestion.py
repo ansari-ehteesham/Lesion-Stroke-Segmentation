@@ -1,7 +1,8 @@
-import sys, os
+import os
 import shutil
 import tarfile 
 import subprocess
+from args import get_args
 from lesionSeg.logging import logger
 from lesionSeg.Exception.exception import CustomeException
 from lesionSeg.entity import DataIngestionEntity
@@ -11,6 +12,7 @@ from lesionSeg.entity import DataIngestionEntity
 class DataIngestion:
     def __init__(self, config: DataIngestionEntity):
         self.config = config
+        self.arg = get_args()
         
     def rename_folder(self, unzip_dir):
         for file in os.listdir(unzip_dir):   
@@ -20,11 +22,11 @@ class DataIngestion:
                 break
 
     def decrypt_dataset(self, zip_file):
-        file_name = self.config.encrypted_dataset
+        file_name = self.arg.dataset
         try:
             if not shutil.which('openssl'):
                 message = "OpenSSL is not Installed. Please Installed OpenSSL"
-                raise ModuleNotFoundError(message)
+                raise CustomeException(message)
             else:
                 password = self.config.password
                 cmd = [
@@ -59,6 +61,9 @@ class DataIngestion:
             file.extractall(unzip_dir) 
             file.close()
             logger.info(f"Dataset Unzipped at: {unzip_dir}/{zip_file}")
+
+            os.remove("Raw.tar.gz")
+            logger.info(f"Data Zip file has been Deleted: {zip_file}")
         except Exception as e:
             raise CustomeException(e)
         

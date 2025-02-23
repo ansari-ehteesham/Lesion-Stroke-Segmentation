@@ -1,6 +1,6 @@
 import os
 import cv2
-import sys
+import shutil
 import pandas as pd
 import numpy as np
 import nibabel as nb
@@ -123,5 +123,7 @@ class DataPreprocessing:
             logger.info(f"Pre-processed training data saved at: {self.config.preprocess_train_in}")
             logger.info(f"Pre-processed testing data saved at: {self.config.preprocess_test_in}")
 
+            shutil.rmtree(self.config.rm_data)
+            logger.info(f"Data Ingestion Folder has been Deleted: {self.config.rm_data}")
         except Exception as e:
             raise CustomeException(e)
